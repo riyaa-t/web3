@@ -1,14 +1,4 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
-
-/**
- * @title QuantumBase
- * @dev A decentralized data storage and verification system using quantum-inspired hashing
- * @notice This contract provides secure data storage with immutable records and verification
- */
-contract QuantumBase {
-    
-    // Struct to store data records
+Struct to store data records
     struct DataRecord {
         bytes32 dataHash;
         address owner;
@@ -17,16 +7,10 @@ contract QuantumBase {
         string metadata;
     }
     
-    // Mapping from record ID to DataRecord
-    mapping(uint256 => DataRecord) public records;
-    
-    // Mapping from address to their record IDs
+    Mapping from address to their record IDs
     mapping(address => uint256[]) public ownerRecords;
     
-    // Counter for record IDs
-    uint256 public recordCount;
-    
-    // Events
+    Events
     event RecordCreated(uint256 indexed recordId, address indexed owner, bytes32 dataHash, uint256 timestamp);
     event RecordVerified(uint256 indexed recordId, address indexed verifier, bool isValid);
     event RecordDeactivated(uint256 indexed recordId, address indexed owner);
@@ -43,10 +27,7 @@ contract QuantumBase {
         recordCount++;
         uint256 newRecordId = recordCount;
         
-        // Create quantum-inspired hash combining data, timestamp, and sender
-        bytes32 dataHash = keccak256(abi.encodePacked(_data, block.timestamp, msg.sender));
-        
-        // Store the record
+        Store the record
         records[newRecordId] = DataRecord({
             dataHash: dataHash,
             owner: msg.sender,
@@ -55,27 +36,7 @@ contract QuantumBase {
             metadata: _metadata
         });
         
-        // Add to owner's records
-        ownerRecords[msg.sender].push(newRecordId);
-        
-        emit RecordCreated(newRecordId, msg.sender, dataHash, block.timestamp);
-        
-        return newRecordId;
-    }
-    
-    /**
-     * @dev Verifies if provided data matches a stored record
-     * @param _recordId The ID of the record to verify
-     * @param _data The data to verify against the stored hash
-     * @return isValid True if the data matches the stored record
-     */
-    function verifyRecord(uint256 _recordId, string memory _data) public returns (bool) {
-        require(_recordId > 0 && _recordId <= recordCount, "Invalid record ID");
-        require(records[_recordId].isActive, "Record is not active");
-        
-        DataRecord memory record = records[_recordId];
-        
-        // Recreate the hash with original parameters
+        Recreate the hash with original parameters
         bytes32 verifyHash = keccak256(abi.encodePacked(_data, record.timestamp, record.owner));
         
         bool isValid = (verifyHash == record.dataHash);
@@ -136,3 +97,6 @@ contract QuantumBase {
         );
     }
 }
+// 
+update
+// 
