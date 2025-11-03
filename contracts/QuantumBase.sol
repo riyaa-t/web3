@@ -1,4 +1,8 @@
-Struct to store data records
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract QuantumDataRegistry {
+    // Struct to store data records
     struct DataRecord {
         bytes32 dataHash;
         address owner;
@@ -6,28 +10,49 @@ Struct to store data records
         bool isActive;
         string metadata;
     }
-    
-    Mapping from address to their record IDs
+
+    // Mapping: record ID => DataRecord
+    mapping(uint256 => DataRecord) public records;
+
+    // Mapping: owner address => array of record IDs
     mapping(address => uint256[]) public ownerRecords;
-    
-    Events
-    event RecordCreated(uint256 indexed recordId, address indexed owner, bytes32 dataHash, uint256 timestamp);
-    event RecordVerified(uint256 indexed recordId, address indexed verifier, bool isValid);
-    event RecordDeactivated(uint256 indexed recordId, address indexed owner);
-    
+
+    // Total record count
+    uint256 public recordCount;
+
+    // Events
+    event RecordCreated(
+        uint256 indexed recordId,
+        address indexed owner,
+        bytes32 dataHash,
+        uint256 timestamp
+    );
+    event RecordVerified(
+        uint256 indexed recordId,
+        address indexed verifier,
+        bool isValid
+    );
+    event RecordDeactivated(
+        uint256 indexed recordId,
+        address indexed owner
+    );
+
     /**
      * @dev Creates a new data record with quantum-inspired hashing
      * @param _data The data to be stored (hashed on-chain)
      * @param _metadata Additional metadata about the record
      * @return recordId The ID of the newly created record
      */
-    function createRecord(string memory _data, string memory _metadata) public returns (uint256) {
+    function createRecord(string memory _data, string memory _metadata) public returns (uint256 recordId) {
         require(bytes(_data).length > 0, "Data cannot be empty");
-        
+
         recordCount++;
         uint256 newRecordId = recordCount;
-        
-        Store the record
+
+        // Quantum-inspired hashing: hash data + timestamp + owner
+        bytes32 dataHash = keccak256(abi.encodePacked(_data, block.timestamp, msg.sender));
+
+        // Store the record
         records[newRecordId] = DataRecord({
             dataHash: dataHash,
             owner: msg.sender,
@@ -35,17 +60,34 @@ Struct to store data records
             isActive: true,
             metadata: _metadata
         });
-        
-        Recreate the hash with original parameters
-        bytes32 verifyHash = keccak256(abi.encodePacked(_data, record.timestamp, record.owner));
-        
-        bool isValid = (verifyHash == record.dataHash);
-        
-        emit RecordVerified(_recordId, msg.sender, isValid);
-        
-        return isValid;
+
+        // Track records for owner
+        ownerRecords[msg.sender].push(newRecordId);
+
+        emit RecordCreated(newRecordId, msg.sender, dataHash, block.timestamp);
+
+        return newRecordId;
     }
-    
+
+    /**
+     * @dev Verifies the hash of a stored record using original parameters.
+     * @param _recordId The ID of the record to verify.
+     * @param _data The original data.
+     * @return isValid True if the hash matches, false otherwise.
+     */
+    function verifyRecord(uint256 _recordId, string memory _data) public returns (bool isValid) {
+        require(_recordId > 0 && _recordId <= recordCount, "Invalid record ID");
+
+        DataRecord memory record = records[_recordId];
+        bytes32 verifyHash = keccak256(abi.encodePacked(_data, record.timestamp, record.owner));
+
+        bool validity = (verifyHash == record.dataHash);
+
+        emit RecordVerified(_recordId, msg.sender, validity);
+
+        return validity;
+    }
+
     /**
      * @dev Deactivates a record (only owner can deactivate)
      * @param _recordId The ID of the record to deactivate
@@ -54,12 +96,12 @@ Struct to store data records
         require(_recordId > 0 && _recordId <= recordCount, "Invalid record ID");
         require(records[_recordId].owner == msg.sender, "Only owner can deactivate");
         require(records[_recordId].isActive, "Record already deactivated");
-        
+
         records[_recordId].isActive = false;
-        
+
         emit RecordDeactivated(_recordId, msg.sender);
     }
-    
+
     /**
      * @dev Retrieves all record IDs owned by an address
      * @param _owner The address to query
@@ -68,7 +110,7 @@ Struct to store data records
     function getOwnerRecords(address _owner) public view returns (uint256[] memory) {
         return ownerRecords[_owner];
     }
-    
+
     /**
      * @dev Gets detailed information about a specific record
      * @param _recordId The ID of the record
@@ -78,15 +120,19 @@ Struct to store data records
      * @return isActive Whether the record is active
      * @return metadata Additional metadata
      */
-    function getRecordDetails(uint256 _recordId) public view returns (
-        bytes32 dataHash,
-        address owner,
-        uint256 timestamp,
-        bool isActive,
-        string memory metadata
-    ) {
+    function getRecordDetails(uint256 _recordId)
+        public
+        view
+        returns (
+            bytes32 dataHash,
+            address owner,
+            uint256 timestamp,
+            bool isActive,
+            string memory metadata
+        )
+    {
         require(_recordId > 0 && _recordId <= recordCount, "Invalid record ID");
-        
+
         DataRecord memory record = records[_recordId];
         return (
             record.dataHash,
@@ -97,6 +143,3 @@ Struct to store data records
         );
     }
 }
-// 
-update
-// 
