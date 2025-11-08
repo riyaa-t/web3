@@ -1,8 +1,4 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract QuantumDataRegistry {
-    // Struct to store data records
+Struct to store data records
     struct DataRecord {
         bytes32 dataHash;
         address owner;
@@ -11,16 +7,10 @@ contract QuantumDataRegistry {
         string metadata;
     }
 
-    // Mapping: record ID => DataRecord
-    mapping(uint256 => DataRecord) public records;
-
-    // Mapping: owner address => array of record IDs
+    Mapping: owner address => array of record IDs
     mapping(address => uint256[]) public ownerRecords;
 
-    // Total record count
-    uint256 public recordCount;
-
-    // Events
+    Events
     event RecordCreated(
         uint256 indexed recordId,
         address indexed owner,
@@ -49,10 +39,7 @@ contract QuantumDataRegistry {
         recordCount++;
         uint256 newRecordId = recordCount;
 
-        // Quantum-inspired hashing: hash data + timestamp + owner
-        bytes32 dataHash = keccak256(abi.encodePacked(_data, block.timestamp, msg.sender));
-
-        // Store the record
+        Store the record
         records[newRecordId] = DataRecord({
             dataHash: dataHash,
             owner: msg.sender,
@@ -143,3 +130,6 @@ contract QuantumDataRegistry {
         );
     }
 }
+// 
+End
+// 
